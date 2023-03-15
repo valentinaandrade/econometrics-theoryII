@@ -2,85 +2,145 @@
 
 # 1. Load packages --------------------------------------------------------
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load(tidyverse, haven)
+pacman::p_load(tidyverse, haven, broom)
 
 # 2. Load data ------------------------------------------------------------
-data <- haven::read_dta("01input/src/data_pregunta1.dta")
+data1 <- haven::read_dta("01input/src/data_pregunta1.dta")
 
 # a. Likelihood function --------------------------------------------------
-manual_logistic_regression = function(X,y,threshold = 1e-10, max_iter = 100)
-  #A function to find logistic regression coeffiecients 
-  #Takes three inputs: 
-{
-  #A function to return p, given X and beta
-  #We'll need this function in the iterative section
-  calc_p = function(X,beta)
-  {
-    beta = as.vector(beta)
-    return(exp(X%*%beta) / (1+ exp(X%*%beta)))
-  }  
-  
-  #### setup bit ####
-  
-  #initial guess for beta
-  beta = rep(0,ncol(X))
-  
-  #initial value bigger than threshold so that we can enter our while loop 
-  diff = 10000 
-  
-  #counter to ensure we're not stuck in an infinite loop
-  iter_count = 0
-  
-  #### iterative bit ####
-  while(diff > threshold ) #tests for convergence
-  {
-    #calculate probabilities using current estimate of beta
-    p = as.vector(calc_p(X,beta))
-    
-    #calculate matrix of weights W
-    W =  diag(p*(1-p)) 
-    
-    #calculate the change in beta
-    beta_change = solve(t(X)%*%W%*%X) %*% t(X)%*%(y - p)
-    
-    #update beta
-    beta = beta + beta_change
-    
-    #calculate how much we changed beta by in this iteration 
-    #if this is less than threshold, we'll break the while loop 
-    diff = sum(beta_change^2)
-    
-    #see if we've hit the maximum number of iterations
-    iter_count = iter_count + 1
-    if(iter_count > max_iter) {
-      stop("This isn't converging, mate.")
-    }
-  }
-  #make it pretty 
-  coef = c("(Intercept)" = beta[1], x1 = beta[2], x2 = beta[3], x3 = beta[4])
-  return(coef)
+# Data selection
+data <- data1 |> 
+  dplyr::select(
+    y = municipal, 
+    x1 = cod_nivel,
+    x2 = es_mujer,
+    x3 = prioritario,
+    x4 = alto_rendimiento
+  ) 
+
+# First we estimate the model by R function. Then we compare with my algorithm
+model1 <- glm(y ~ x1 + x2 + x3 + x4, family = binomial(), data = data)
+# Results
+summary(model1)
+#Coefficients
+broom::tidy(model1)
+#Fit
+broom::glance(model1)
+
+# a.1 newton rapshon ----------------------------------------------------------
+# Define the response variable and explanatory variables
+y <- as.numeric(data$y)
+x <- as.matrix(data[, -y])
+
+# Add a column of ones to the design matrix for the intercept term
+x <- cbind(1, x)
+
+# Define the log-likelihood function for logistic regression
+log_likelihood <- function(beta, x, y) {
+  mu <- plogis(x %*% beta) # Compute the predicted probabilities
+  log_likelihood <- sum(y * log(mu) + (1 - y) * log(1 - mu)) # Compute the log-likelihood
+  return(-log_likelihood) # Return the negative log-likelihood (for minimization)
 }
 
-set.seed(2016)
-#simulate data 
-#independent variables
-x1 = data[,"cod_nivel"]
-x2 = data[, "es_mujer"]
-x3 = data[, "prioritario"]
-x4 = data[, "alto_rendimiento"]
+log_likelihood(model1$coefficients, x, y)
+broom::glance(model1)$logLik
 
+# Define the derivative of the log-likelihood function
+log_likelihood_derivative <- function(beta, x, y) {
+  mu <- plogis(x %*% beta) # Compute the predicted probabilities
+  residuals <- y - mu # Compute the residuals
+  derivative <- t(x) %*% residuals # Compute the derivative
+  # se cambia signo!
+  return(derivative) # Return the negative derivative (for minimization)
+}
 
-#dependent variable 
-y = data[,"municipal"]
-x0 = rep(1,222) #bias
-X = cbind(x0,x1,x2,x3,x4)
-manual_logistic_regression(X, y)
-manual_logistic_regression(data %>% mutate(x0= rep(1,222)) %>%  select(x0, cod_nivel, es_mujer, prioritario, alto_rendimiento), data %>% select(municipal))
+# Define the second derivative of the log-likelihood function (Hessian matrix)
+log_likelihood_second_derivative <- function(beta, x, y) {
+  mu <- plogis(x %*% beta) # Compute the predicted probabilities
+  w <- mu * (1 - mu) # Compute the weights
+  # acá se tranforma a vector por si acaso
+  hessian <- t(x) %*% diag(as.vector(w)) %*% x # Compute the Hessian matrix
+  return(-hessian) # Return the negative Hessian matrix (for minimization)
+}
+
+# Set the starting values for the parameters
+beta <- rep(0, ncol(x))
+
+# Set the convergence tolerance and maximum number of iterations
+tol <- 1e-6
+max_iter <- 1000
+
+# Iterate until convergence or maximum number of iterations is reached
+for (i in 1:max_iter) {
+  
+  message(i)
+  
+  # Compute the gradient and Hessian matrix
+  gradient <- log_likelihood_derivative(beta, x, y)
+  hessian <- log_likelihood_second_derivative(beta, x, y)
+  
+  # Check for convergence
+  if (max(abs(gradient)) < tol) {
+    break
+  }
+  
+  # Update the parameter estimates using the Newton-Raphson method
+  beta <- beta - as.vector(solve(hessian) %*% gradient)
+  
+}
+
+# betas
+beta
+broom::tidy(model1)$estimate
+
+# std error
+sqrt(diag(solve(-hessian)))
+broom::tidy(modelo)$std.error
+
+# a.1 robust  ----------------------------------------------------------------
+robustse <- function(x, coef = c("logit", "odd.ratio", "probs")) {
+  suppressMessages(suppressWarnings(library(lmtest)))
+  suppressMessages(suppressWarnings(library(sandwich)))
+  
+  sandwich1 <- function(object, ...) sandwich(object) *
+    nobs(object) / (nobs(object) - 1)
+  # Function calculates SE's
+  mod1 <- coeftest(x, vcov = sandwich1) 
+  # apply the function over the variance-covariance matrix
+  
+  if (coef == "logit") {
+    return(mod1) # return logit with robust SE's
+  } else if (coef == "odd.ratio") {
+    mod1[, 1] <- exp(mod1[, 1]) # return odd ratios with robust SE's
+    mod1[, 2] <- mod1[, 1] * mod1[, 2]
+    return(mod1)
+  } else {
+    mod1[, 1] <- (mod1[, 1]/4) # return probabilites with robust SE's
+    mod1[, 2] <- mod1[, 2]/4
+    return(mod1)
+  }
+}
+
+model1
+model1_r <- robustse(model1, coef = "logit")
+model1_r
+
+broom::tidy(model1)$std.error
+model1_r[, 2]
+
 
 # b. Marginal effects -----------------------------------------------------
+# calculate marginal effects
 
+logitmfx(municipal ~ cod_nivel + es_mujer + prioritario + alto_rendimiento, data1, atmean = T, robust = T)
 
 # c. Descriptives ---------------------------------------------------------
+data1 %>% 
+  mutate(tipo_establecimiento = as_factor(case_when(tipo == 1 ~ "Municipal-No PIE",
+                                                    tipo == 2 ~ "Municipal-PIE",
+                                                    tipo == 3 ~ "Subvencionado-No PIE",
+                                                    tipo == 4 ~ "Subvencionado-PIE"))) %$%
+  sjmisc::frq(.$tipo_establecimiento)
 
 
 # d. Multinomial logit ----------------------------------------------------
