@@ -2,7 +2,9 @@
 
 # 1. Load packages --------------------------------------------------------
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load(tidyverse, haven, broom)
+pacman::p_load(tidyverse, haven, broom,
+               mfx, # marginals 
+               nnet)
 
 # 2. Load data ------------------------------------------------------------
 data1 <- haven::read_dta("01input/src/data_pregunta1.dta")
@@ -135,18 +137,19 @@ model1_r[, 2]
 logitmfx(municipal ~ cod_nivel + es_mujer + prioritario + alto_rendimiento, data1, atmean = T, robust = T)
 
 # c. Descriptives ---------------------------------------------------------
-data1 %>% 
+data1 <- data1 %>% 
   mutate(tipo_establecimiento = as_factor(case_when(tipo == 1 ~ "Municipal-No PIE",
                                                     tipo == 2 ~ "Municipal-PIE",
                                                     tipo == 3 ~ "Subvencionado-No PIE",
-                                                    tipo == 4 ~ "Subvencionado-PIE"))) %$%
-  sjmisc::frq(.$tipo_establecimiento)
+                                                    tipo == 4 ~ "Subvencionado-PIE")))
+
+sjmisc::frq(data1$tipo_establecimiento)
 
 
 # d. Multinomial logit ----------------------------------------------------
+model2 <- multinom(tipo_establecimiento ~ cod_nivel + es_mujer + prioritario + alto_rendimiento, data = data1)
 
-
-
+summary(model2)
 # e. Conditional logit ----------------------------------------------------
 
 
