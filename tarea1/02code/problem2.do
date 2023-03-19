@@ -6,7 +6,7 @@
 
 set more off 
 clear all
-set cformat %9.3f
+set cformat %9.2f
 
 * ------------------------------------------------------------------------------
 * SET PATH AND LOCALS
