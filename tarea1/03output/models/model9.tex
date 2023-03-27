@@ -1,27 +1,24 @@
+{
+\def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
 \begin{tabular}{l*{2}{c}}
-            &          m9&         m91\\
-            &   drop\_name&           \_\\
-            &        b/se&        b/se\\
-complaints  &    .2120058&    .0259562\\
-            &  [.0306703]&  [.0039146]\\
-firm\_age    &   -.0079493&   -.0009732\\
-            &  [.0240257]&  [.0029412]\\
-emp\_size    &    .0084816&    .0010384\\
-            &  [.0051336]&  [.0006279]\\
-ad\_spend\_k  &    .0249973&    .0030605\\
-            &  [.0113991]&  [.0013926]\\
-chicago     &    .3227446&    .0395141\\
-            &  [.0935327]&  [.0112398]\\
-comp\_sq     &   -.0048214&   -.0005903\\
-            &  [.0009547]&  [.0001187]\\
-age\_sq      &    .0003921&     .000048\\
-            &  [.0008446]&  [.0001034]\\
-emp\_sq      &   -.0000416&   -5.10e-06\\
-            &  [.0000282]&  [3.45e-06]\\
-ad\_sq       &   -.0004653&    -.000057\\
-            &   [.000267]&  [.0000327]\\
-\_cons      &   -1.880743&            \\
-            &  [.1422224]&            \\
-\(N\)       &        2293&        2293\\
-\multicolumn{3}{l}{\footnotesize  Marginal effects estimate by Binary Probit model}\\
+\toprule
+                    &          m9         &         m91         \\
+                    &   drop\_name         &           \_         \\
+                    &           b         &           b         \\
+\midrule
+Complaints          &       0.212\sym{***}&       0.026\sym{***}\\
+Years in Opeartion  &      -0.008         &      -0.001         \\
+Employees           &       0.008\sym{*}  &       0.001\sym{*}  \\
+Ad Spending         &       0.025\sym{**} &       0.003\sym{**} \\
+Metro Chicago       &       0.323\sym{***}&       0.040\sym{***}\\
+Complaints$^{2}$    &      -0.005\sym{***}&      -0.001\sym{***}\\
+Firm Age$^{2}$      &       0.000         &       0.000         \\
+Employees$^{2}$     &      -0.000         &      -0.000         \\
+Ad Spending$^{2}$   &      -0.000\sym{*}  &      -0.000\sym{*}  \\
+Constant            &      -1.881\sym{***}&                     \\
+\midrule
+Observations        &        2293         &        2293         \\
+Pseudo \(R^{2}\)    &    .0863037         &                     \\
+\bottomrule
 \end{tabular}
+}

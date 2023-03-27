@@ -6,7 +6,7 @@
 
 set more off 
 clear all
-
+eststo clear
 * ------------------------------------------------------------------------------
 * SET PATH AND LOCALS
 * ------------------------------------------------------------------------------
@@ -18,56 +18,54 @@ global tmp  	"$github/01input/tmp"
 global output   "$github/03output"
 
 * ------------------------------------------------------------------------------
-* use data
+**# use data
 * ------------------------------------------------------------------------------
 
 use "$src/data_pregunta1", clear
 
 * ------------------------------------------------------------------------------
-* (a) program likelihood
+**# (a) program likelihood
 * ------------------------------------------------------------------------------
 * in R
 
 * ------------------------------------------------------------------------------
-* (b) logit and marginal effects
+**# (b) logit and marginal effects
 * ------------------------------------------------------------------------------
 
 * 1. Estimate logit in Stata
-qui logit municipal cod_nivel i.es_mujer i.prioritario i.alto_rendimiento, rob
-* 2. Save logit
-esttab using "$output/models/model1.tex", se brackets nonumbers mtitles("Logit model for enroll to public school") plain type nobase unstack replace
+qui eststo m1: logit municipal cod_nivel i.es_mujer i.prioritario i.alto_rendimiento, r
 
-* 3. Marginals (in probability) atmeans 
-margins, dydx (cod_nivel i.es_mujer i.prioritario i.alto_rendimiento) atmeans post
-* 4. Save margins
-esttab using "$output/models/marginal1.tex", se brackets nonumbers mtitles("Marginal effects enroll to public school") addnotes("Coefficients estimate by Binary Logit model") plain type nobase unstack replace
+* 2. Marginals (in probability) atmeans 
+qui eststo m11: margins, dydx (cod_nivel i.es_mujer i.prioritario i.alto_rendimiento) atmeans post
+
+* 3. Save logit and margins
+esttab m1 m11 using "$output/models/model1.tex", se brackets pr2 nonumbers plain type nobase unstack noomitted label lines star(* 0.10 ** 0.05 *** 0.01) compress  cells(b(star fmt(%9.3f)))  replace 
 
 * ------------------------------------------------------------------------------
-* (c) type_school
+**# (c) type_school
 * ------------------------------------------------------------------------------
 
 * Label tipo
 label define type_school 1 municipalnoPIE 2 municipalPIE 3 subvencionadonoPIE 4 subvencionadoPIE, replace
 label value tipo type_school
 * Tab
-tab tipo
+estpost tab tipo
+esttab . using "$output/models/tab00.tex", cell("b pct(fmt(a))")  collab("Freq." "Percent") noobs nonumb nomtitle replace
 
 * ------------------------------------------------------------------------------
-* (d) multinomial logit and marginal effects
+**# (d) multinomial logit and marginal effects
 * ------------------------------------------------------------------------------
 * 1. Estimate multinomial logit in Stata
-qui mlogit tipo cod_nivel i.es_mujer i.prioritario i.alto_rendimiento, rob base(1)
-* 2. Save model2 
-esttab using "$output/models/model2.tex", se brackets nonumber mtitles("Multinomial logit for enroll by type of schools")  plain type nobase unstack replace
+qui eststo m2: mlogit tipo cod_nivel i.es_mujer i.prioritario i.alto_rendimiento, r base(1)
 
-* 3. Margins
-margins, dydx (cod_nivel i.es_mujer i.prioritario i.alto_rendimiento) atmeans post
-* 4. Save margins
-esttab using "$output/models/marginal2.tex", se brackets nonumber mtitles("Marginals Effect of enroll by type of schools") addnotes("Coefficients estimate by a Multinomial Logit") plain type nobase unstack replace
+* 2. Margins
+qui eststo m21: margins, dydx (cod_nivel i.es_mujer i.prioritario i.alto_rendimiento) atmeans post
 
+* 3. Save model2 
+esttab m2 m21 using "$output/models/model2.tex", se brackets pr2 nonumbers plain type nobase unstack noomitted label booktabs lines star(* 0.10 ** 0.05 *** 0.01) cells(b(star fmt(%9.3f))) replace
 
 * ------------------------------------------------------------------------------
-* (e) conditional logit
+**# (e) conditional logit
 * ------------------------------------------------------------------------------
 * 1. Long data across alternatives
 reshape long distancia p_prioritario simce_lect simce_mate, i(mrun) j(type_school) 
@@ -81,30 +79,26 @@ replace choice=1 if type_school==tipo
 
 * 3. Estimation with McFadden for general conditional logit
 * Similar as clogit
-qui asclogit choice distancia p_prioritario simce_lect simce_mate, case(mrun) alternatives(type_school) vce(robust) nocons
+qui eststo m3: asclogit choice distancia p_prioritario simce_lect simce_mate, case(mrun) alternatives(type_school) vce(robust) nocons
 
-* 4. Save table
-esttab using "$output/models/model3.tex", se brackets nonumber mtitles("Multinomial Conditional Logit of enroll by type of schools") plain type nobase unstack replace
-
-* 5. Marginals
-margins, dydx (distancia p_prioritario simce_lect simce_mate) atmeans post
-
-* 6. Save table
-esttab using "$output/models/marginal3.tex", se brackets nonumber mtitles("Marginal Effects of enroll by type of schools") addnotes("Coefficients estimate by a Multinomial Conditional Logit") plain type nobase unstack replace
+* 4. Marginals
+qui eststo m31: margins, dydx (distancia p_prioritario simce_lect simce_mate) atmeans post
+* 5. Save table
+esttab m3 m31 using "$output/models/model3.tex", se brackets pr2 nonumbers plain type nobase unstack noomitted label booktabs lines star(* 0.10 ** 0.05 *** 0.01) cells(b(star fmt(%9.3f))) replace
 
 * ------------------------------------------------------------------------------
-* (f) mixed logit or alternative conditional logit
+**# (f) mixed logit or alternative conditional logit
 * ------------------------------------------------------------------------------
 * Xs determined by individual and alternative (mix)
 
 *1. Estimate mixed logit with casevars
 * noncons not allowed 
-asclogit choice distancia p_prioritario simce_lect simce_mate, case(mrun) alternatives(type_school) casevars(cod_nivel i.es_mujer i.prioritario i.alto_rendimiento) vce(robust)
-* 2. Save tab models
-esttab using "$output/models/model4.tex", se brackets nonumber mtitles("Multinomial Mixed Logit of enroll by type of schools") plain type nobase unstack replace
+qui eststo m4: asclogit choice distancia p_prioritario simce_lect simce_mate, case(mrun) alternatives(type_school) casevars(cod_nivel i.es_mujer i.prioritario i.alto_rendimiento) vce(robust)
 
-* 3. Marginals
-margins, dydx (distancia p_prioritario simce_lect simce_mate cod_nivel i.es_mujer i.prioritario i.alto_rendimiento) atmeans post
+* 2. Marginals
+qui eststo m41: margins, dydx (distancia p_prioritario simce_lect simce_mate cod_nivel i.es_mujer i.prioritario i.alto_rendimiento) atmeans post
 
-* 4. Save marginals
-esttab using "$output/models/marginal4.tex", se brackets nonumber mtitles("Marginal Effects of enroll by type of schools") addnotes("Coefficients estimate by a Multinomial Mixed Logit") plain type nobase unstack replace
+* 3. Save tab models
+esttab m4 m41 using "$output/models/model4.tex", se brackets pr2 nonumbers plain type nobase unstack noomitted label booktabs lines star(* 0.10 ** 0.05 *** 0.01) cells(b(star fmt(%9.3f))) replace
+
+

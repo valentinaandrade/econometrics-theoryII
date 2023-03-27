@@ -1,0 +1,25 @@
+	(1)
+VARIABLES	y1
+	
+complaints	0.0425***
+	(0.00708)
+firm_age	-0.0246***
+	(0.00465)
+emp_size	0.00109
+	(0.00115)
+ad_spend_k	0.00183
+	(0.00245)
+chicago	0.0639***
+	(0.0175)
+comp_sq	-0.000836***
+	(0.000187)
+age_sq	0.000687***
+	(0.000167)
+emp_sq	-7.72e-06
+	(6.57e-06)
+ad_sq	-3.01e-05
+	(5.79e-05)
+	
+Observations	2,293
+Standard errors in parentheses	
+*** p<0.01, ** p<0.05, * p<0.1	

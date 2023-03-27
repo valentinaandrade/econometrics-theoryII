@@ -1,0 +1,23 @@
+{
+\def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
+\begin{tabular}{l*{4}{c}}
+\toprule
+                &       m4         &                  &                  &                  \\
+                &type\_school         &        2         &        3         &        4         \\
+                &        b         &        b         &        b         &        b         \\
+\midrule
+distancia       &   -0.054\sym{**} &                  &                  &                  \\
+p\_prioritario   &    2.696\sym{*}  &                  &                  &                  \\
+Puntaje promedio del establecimiento en Lectura&   -0.017\sym{***}&                  &                  &                  \\
+Puntaje promedio del establecimiento en Matemática&    0.016\sym{***}&                  &                  &                  \\
+cod\_nivel       &                  &   -0.023         &    0.102         &   -0.179\sym{**} \\
+es\_mujer=1      &                  &    0.287         &    1.350\sym{***}&    0.166         \\
+prioritario=1   &                  &   -0.018         &    0.631         &    1.049\sym{**} \\
+alto\_rendimiento=1&                  &    0.059         &   -0.373         &    0.461         \\
+Constant        &                  &    0.533         &   -1.906\sym{*}  &    0.545         \\
+\midrule
+Observations    &      888         &                  &                  &                  \\
+Pseudo \(R^{2}\)&                  &                  &                  &                  \\
+\bottomrule
+\end{tabular}
+}
