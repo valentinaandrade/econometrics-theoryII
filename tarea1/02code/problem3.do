@@ -150,14 +150,14 @@ esttab m_* using "$output/models/model11.tex", keep (tra post) se r2 brackets no
 * ------------------------------------------------------------------------------
 
 * No cash models cash==0 & bus==1
-qui eststo p_1: poisson crime_n $times if cash==0 & bus==1, r nolog
-qui eststo p_2: poisson crime_n $times i.month if cash==0 & bus==1, r nolog
-qui eststo p_3: poisson crime_n $times robb_ps i.month if cash==0 & bus==1, r nolog
+qui eststo p_1: poisson crime $times if cash==0 & bus==1, r nolog
+qui eststo p_2: poisson crime $times i.month if cash==0 & bus==1, r nolog
+qui eststo p_3: poisson crime $times robb_ps i.month if cash==0 & bus==1, r nolog
 
 * Cash models cash==1 & bus==1
-qui eststo p_4: poisson crime_n $times if cash==1 & bus==1, r nolog
-qui eststo p_5: poisson crime_n $times i.month if cash==1 & bus==1, r nolog
-qui eststo p_6: poisson crime_n $times robb_ps i.month if cash==1 & bus==1, r nolog
+qui eststo p_4: poisson crime $times if cash==1 & bus==1, r nolog
+qui eststo p_5: poisson crime $times i.month if cash==1 & bus==1, r nolog
+qui eststo p_6: poisson crime $times robb_ps i.month if cash==1 & bus==1, r nolog
 
 *Table 2 ----------------------------------------------------------------------
 esttab p_* using "$output/models/model12.tex", keep (tra post) se pr2 brackets nonumbers plain type nobase unstack noomitted label booktabs lines star(* 0.10 ** 0.05 *** 0.01) cells(b(star fmt(%9.3f))) replace
@@ -167,14 +167,14 @@ esttab p_* using "$output/models/model12.tex", keep (tra post) se pr2 brackets n
 * ------------------------------------------------------------------------------
 
 * No cash models cash==0 & bus==1
-qui eststo b_1: nbreg crime_n $times if cash==0 & bus==1, r nolog
-qui eststo b_2: nbreg crime_n $times i.month if cash==0 & bus==1, r nolog
-qui eststo b_3: nbreg crime_n $times robb_ps i.month if cash==0 & bus==1, r nolog
+qui eststo b_1: nbreg crime $times if cash==0 & bus==1, r nolog
+qui eststo b_2: nbreg crime $times i.month if cash==0 & bus==1, r nolog
+qui eststo b_3: nbreg crime $times robb_ps i.month if cash==0 & bus==1, r nolog
 
 * Cash models cash==1 & bus==1
-qui eststo b_4: nbreg crime_n $times if cash==1 & bus==1, r nolog
-qui eststo b_5: nbreg crime_n $times i.month if cash==1 & bus==1, r nolog
-qui eststo b_6: nbreg crime_n $times robb_ps i.month if cash==1 & bus==1, r nolog
+qui eststo b_4: nbreg crime $times if cash==1 & bus==1, r nolog
+qui eststo b_5: nbreg crime $times i.month if cash==1 & bus==1, r nolog
+qui eststo b_6: nbreg crime $times robb_ps i.month if cash==1 & bus==1, r nolog
 
 *Table 2 ----------------------------------------------------------------------
 esttab b_* using "$output/models/model13.tex", keep(tra post) se pr2 brackets nonumbers plain type nobase unstack noomitted label booktabs lines star(* 0.10 ** 0.05 *** 0.01) cells(b(star fmt(%9.3f))) replace
