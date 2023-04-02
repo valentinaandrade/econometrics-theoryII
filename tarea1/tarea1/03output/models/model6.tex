@@ -1,0 +1,33 @@
+{
+\def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
+\begin{tabular}{l*{6}{c}}
+\hline\hline
+                &      m61         &                  &      m62         &                  &      m63         &                  \\
+                &        1         &        2         &        1         &        2         &        1         &        2         \\
+                &        b         &        b         &        b         &        b         &        b         &        b         \\
+\hline
+Complaints      &    0.086\sym{*}  &    0.288\sym{***}&   -0.012         &    0.502\sym{***}&    0.439         &    0.812\sym{***}\\
+Years in Opeartion&   -0.155\sym{***}&   -0.065\sym{**} &   -0.145\sym{***}&   -0.083\sym{**} &   -0.154\sym{***}&   -0.085\sym{**} \\
+Employees       &    0.000         &    0.010         &   -0.002         &    0.004         &   -0.002         &    0.004         \\
+Ad Spending     &   -0.004         &    0.025\sym{*}  &   -0.001         &    0.005         &   -0.050         &    0.017         \\
+Metro Chicago   &    0.212\sym{**} &    0.489\sym{***}&    0.307\sym{*}  &    0.253         &    0.138         &    0.354         \\
+Complaints$^{2}$&   -0.002         &   -0.006\sym{***}&   -0.002         &   -0.005\sym{***}&   -0.002         &   -0.005\sym{***}\\
+Firm Age$^{2}$  &    0.004\sym{***}&    0.002\sym{*}  &    0.004\sym{***}&    0.002         &    0.004\sym{***}&    0.002         \\
+Employees$^{2}$ &   -0.000         &   -0.000         &   -0.000         &   -0.000         &   -0.000         &   -0.000         \\
+Ad Spending$^{2}$&    0.000         &   -0.000         &   -0.000         &   -0.000         &   -0.000         &   -0.000         \\
+Complaints * Metro Chicago&                  &                  &    0.093         &   -0.232\sym{**} &   -0.361         &   -0.549\sym{***}\\
+Firm Age * Metro Chicago&                  &                  &   -0.010         &    0.024\sym{*}  &    0.007         &    0.024         \\
+Complaints * Ad Spending&                  &                  &    0.000         &   -0.001         &   -0.116         &   -0.016\sym{**} \\
+Firm Age * Ad Spending&                  &                  &   -0.000         &    0.002\sym{***}&    0.004\sym{**} &    0.001         \\
+Complaints * Employees&                  &                  &   -0.000         &    0.000         &   -0.000         &    0.000         \\
+Firm Age * Employees&                  &                  &    0.000         &    0.000         &    0.000         &    0.000         \\
+Ad Spending * Metro Chicago&                  &                  &                  &                  &    0.062\sym{*}  &   -0.020         \\
+Complaints * Ad Spending * Chicago&                  &                  &                  &                  &    0.117         &    0.015\sym{**} \\
+Firm Age * Ad Spending * Chicago&                  &                  &                  &                  &   -0.005\sym{***}&    0.000         \\
+Constant        &   -0.786\sym{***}&   -2.068\sym{***}&   -0.854\sym{***}&   -1.790\sym{***}&   -0.743\sym{***}&   -1.862\sym{***}\\
+\hline
+Observations    &     2293         &                  &     2293         &                  &     2293         &                  \\
+Pseudo \(R^{2}\)&                  &                  &                  &                  &                  &                  \\
+\hline\hline
+\end{tabular}
+}
