@@ -1,0 +1,10 @@
+	(1)	(2)
+VARIABLES	z_irt_total_el	z_scoreindex_el
+		
+treatment	0.270**	0.269**
+	(0.136)	(0.117)
+		
+Observations	2,622	2,463
+Number of groups	0	0
+Robust standard errors in parentheses		
+*** p<0.01, ** p<0.05, * p<0.1		
