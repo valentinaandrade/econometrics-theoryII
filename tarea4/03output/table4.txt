@@ -1,0 +1,10 @@
+		(1)
+VARIABLES	LABELS	propconflictCOW2
+		
+logmaddpop	log of population	0.617
+		(0.213)
+		
+Observations		102
+Number of countrynum		51
+Number of clusters		50
+Robust standard errors in parentheses		
