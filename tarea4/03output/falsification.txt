@@ -1,0 +1,9 @@
+		(1)	(2)	(3)	(4)	(5)	(6)	(7)	(8)
+VARIABLES	LABELS	1	2	3	4	5	6	7	8
+									
+changemortality	Change in predicted mortality, 1940-1980	-0.782	-0.764	-0.491	-0.660	0.085	0.197	-0.189	-0.198
+		(0.141)	(0.191)	(0.179)	(0.236)	(0.055)	(0.126)	(0.138)	(0.196)
+									
+Observations		51	40	52	41	36	28	52	41
+R-squared		0.306	0.238	0.166	0.200	0.012	0.039	0.033	0.029
+Robust standard errors in parentheses									
