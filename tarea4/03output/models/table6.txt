@@ -1,0 +1,26 @@
+		(1)	(2)	(3)	(4)
+		Winner	Winner	Max % wins	Max % wins
+		local	local	same firm	same firm
+VARIABLES	LABELS	RDD	RDD	OLS	RDD
+					
+tt_cont	N. terms in office	4.776**	3.458	6.023***	5.729***
+		(1.926)	(2.173)	(1.861)	(2.189)
+term_limit	Term limit binding		-1.604		-2.491
+			(3.325)		(2.837)
+pop_res	Population		0.003		-0.108**
+			(0.015)		(0.044)
+starting_value	Starting value		-0.992***		-0.157***
+			(0.105)		(0.036)
+gender	Female mayor		3.035*		-4.637**
+			(1.730)		(1.841)
+age	Age of the mayor		-0.078		-0.222***
+			(0.075)		(0.067)
+tt_party_cont	N. terms in office (party)		0.552		1.367
+			(1.335)		(1.146)
+					
+Observations		12,687	12,687	11,099	11,099
+R-squared		0.002	0.100	0.032	0.309
+Number of Mayors		2195	2195	1814	1814
+Avg. outcome		70.20	70.20	22.37	22.37
+Robust standard errors in parentheses					
+*** p<0.01, ** p<0.05, * p<0.1					

@@ -1,0 +1,50 @@
+                    All
+          NW      0.069
+           .      0.040
+          NE     -0.002
+           .      0.029
+          CE     -0.089
+           .      0.028
+         SOU      0.020
+           .      0.038
+          IS      0.002
+           .      0.016
+  Population  -1520.974
+           .   5284.215
+    Altitude     -3.255
+           .     22.241
+   Extension     -3.362
+           .      4.458
+      gender     -0.015
+           .      0.022
+         age     -1.956
+           .      0.759
+    born_reg      0.009
+           .      0.021
+   secondary     -0.057
+           .      0.041
+     college      0.044
+           .      0.041
+    empl_not      0.010
+           .      0.026
+    empl_low     -0.016
+           .      0.014
+    empl_med     -0.014
+           .      0.024
+   empl_high      0.021
+           .      0.035
+  office_bef     -0.050
+           .      0.041
+party~ft_bef      0.000
+           .      0.041
+party~ht_bef     -0.022
+           .      0.025
+party_~r_bef     -0.005
+           .      0.028
+party_~l_bef      0.000
+           .      0.002
+ same_party1     -0.007
+           .      0.040
+ same_party2      0.037
+           .      0.039
+           N   2268.000

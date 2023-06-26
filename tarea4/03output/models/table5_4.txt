@@ -1,0 +1,24 @@
+		(1)	(2)	(3)	(4)
+		N. of	N. of	Winning	Winning
+		bidders	bidders	rebate	rebate
+VARIABLES	LABELS	RDD	RDD	OLS	RDD
+					
+tt_cont	N. terms in office	-2.515	-2.448***	-1.172*	-0.761**
+		(2.082)	(0.937)	(0.621)	(0.309)
+term_limit	Term limit binding		3.790**		1.044**
+			(1.806)		(0.514)
+pop_res	Population		0.090***		0.031***
+			(0.025)		(0.004)
+starting_value	Starting value		0.746***		0.104***
+			(0.093)		(0.017)
+gender	Female mayor		0.011		0.131
+			(0.848)		(0.307)
+age	Age of the mayor		0.036		0.024**
+			(0.031)		(0.010)
+tt_party_cont	N. terms in office (party)		-0.882		-0.110
+			(0.582)		(0.193)
+					
+Observations		12,687	12,687	12,687	12,687
+R-squared		0.005	0.255	0.005	0.464
+Number of Mayors		2195	2195	2195	2195
+Avg. outcome		21.52	21.52	12.26	12.26

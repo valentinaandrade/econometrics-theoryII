@@ -74,28 +74,37 @@ cap erase "$output/falsification.tex"
 * ------------------------------------------------------------------------------
 *                                 Table 4	  	
 * ------------------------------------------------------------------------------
-
+*endog(logmaddpop) for endogeneity test
 use "$src/data with conflict.dta",clear
 
-xtivreg2 propconflictCOW2 yr1940- yr1980 (logmaddpop=compsjmhatit) if newsample40_COW==1 & (year==1940 | year==1980) ,   fe cluster(ctrycluster)
+xtivreg2 propconflictCOW2 yr1940- yr1980 (logmaddpop=compsjmhatit) if newsample40_COW==1 & (year==1940 | year==1980) ,   fe cluster(ctrycluster) endog(logmaddpop)
+est store propconflictCOW2_iv 
 outreg2 using "$output/table4.tex", keep(logmaddpop) tex(frag) nor2 dec(3) /*noas*/  addstat (Number of clusters, e(N_clust))   ctitle("propconflictCOW2") replace nocons label noaster
 
+
+// ---------------------------------------------------------------------------//
+// 		        		  			Panel A						       	  //	
+// ---------------------------------------------------------------------------//
+
+
 foreach x of varlist propconflictU propconflictFL logdeathpop40U {
-xtivreg2 `x' yr1940- yr1980 (logmaddpop=compsjmhatit) if  newsample40==1 & (year==1940 | year==1980),   fe cluster(ctrycluster)
+xtivreg2 `x' yr1940- yr1980 (logmaddpop=compsjmhatit) if  newsample40==1 & (year==1940 | year==1980),   fe cluster(ctrycluster) endog(logmaddpop)
+est store `x'_iv
 outreg2 using "$output/table4.tex", keep(logmaddpop) tex(frag) nor2 dec(3) /*noas*/  addstat (Number of clusters, e(N_clust))   ctitle("`x'") append nocons label noaster
 
 }
 
+
 cap erase "$output/table4.tex"
 
 // ---------------------------------------------------------------------------//
-// 		        		  			Panel	 B						       	  //	
+// 		        		  			Panel B						       	  //	
 // ---------------------------------------------------------------------------//
 
 
 
 foreach x of varlist propconflictCOW2 propconflictU propconflictFL  logdeathpop40U {
-xtivreg2 `x' yr1940- yr1980 (logmaddpop=compsjmhatit) if  year>1930 & year<1990,   fe cluster(ctrycluster)
+xtivreg2 `x' yr1940- yr1980 (logmaddpop=compsjmhatit) if  year>1930 & year<1990,   fe cluster(ctrycluster) endog(logmaddpop)
 outreg2 using "$output/table42.tex", keep(logmaddpop) tex(frag) nor2 dec(3) /*noas*/  addstat (Number of clusters, e(N_clust))   ctitle("`x'") append nocons label noaster
 }
 

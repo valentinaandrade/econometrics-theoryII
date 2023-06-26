@@ -1,0 +1,1476 @@
+--------------------------------------------------------------------
+      name:  <unnamed>
+       log:  /Users/valentinaandrade/Documents/GitHub/me/econometric
+> s-theoryII/tarea4/01input/src/..\logs\analysis_sample.log
+  log type:  text
+ opened on:  20 Jun 2023, 18:52:53
+
+. 
+end of do-file
+
+. do "/var/folders/y_/x5dzzmyx1tb58qtlb545qbyh0000gn/T//SD09403.00000
+> 0"
+
+. use idtrab ano gender datanasc educ using ..\data\worker_demog02_09
+> .dta, clear
+file ..\data\worker_demog02_09.dta not found
+r(601);
+
+end of do-file
+
+r(601);
+
+. ssc install rif
+checking rif consistency and verifying not already installed...
+installing into /Users/valentinaandrade/Library/Application Support/S
+> tata/ado/plus/...
+installation complete.
+
+. use "$src/final.dta", clear
+
+. do "/var/folders/y_/x5dzzmyx1tb58qtlb545qbyh0000gn/T//SD09403.00000
+> 0"
+
+. DCdensity mv_t, breakpoint(0) generate(Xj Yj r0 fhat se fhat)
+command DCdensity is unrecognized
+r(199);
+
+end of do-file
+
+r(199);
+
+. DCdensity
+command DCdensity is unrecognized
+r(199);
+
+. help DCdensity
+
+. ssc install DCdensity
+ssc install: "dcdensity" not found at SSC, type search dcdensity
+(To find all packages at SSC that start with d, type ssc describe d)
+r(601);
+
+. 
+. capture program drop DCdensity
+
+. program DCdensity, rclass
+  1. {
+  2.   version 9.0
+  3.   set more off
+  4.   pause on
+  5.   syntax varname(numeric) [if/] [in/], breakpoint(real) GENerate
+> (string) ///
+  6.     [ b(real 0) h(real 0) at(string) graphname(string) noGRaph]
+  7.   
+.   marksample touse
+  8.   
+.   //Advanced user switch
+  9.   //0 - supress auxiliary output  1 - display aux output
+ 10.   local verbose 1 
+ 11.  
+.   //Bookkeeping before calling MATA function
+ 12.   //"running variable" in terminology of McCrary (2008)
+ 13.   local R "`varlist'"
+ 14. 
+.   tokenize `generate'
+ 15.   local wc : word count `generate' 
+ 16.   if (`wc'!=5) {
+ 17.     //generate(Xj Yj r0 fhat se_fhat) is suggested
+ 18.     di "Specify names for five variables in generate option"
+ 19.     di "1. Name of variable in which to store cell midpoints of 
+> histogram"
+ 20.     di "2. Name of variable in which to store cell heights of hi
+> stogram"
+ 21.     di "3. Name of variable in which to store evaluation sequenc
+> e for local linear regression loop"
+ 22.     di "4. Name of variable in which to store local linear densi
+> ty estimate"
+ 23.     di "5. Name of variable in which to store standard error of 
+> local linear density estimate"
+ 24.     error 198
+ 25.   }
+ 26.   else {
+ 27.     local cellmpname = "`1'"
+ 28.     local cellvalname = "`2'"
+ 29.     local evalname = "`3'"
+ 30.     local cellsmname = "`4'"
+ 31.     local cellsmsename = "`5'"
+ 32.     confirm new var `1'
+ 33.     confirm new var `2'
+ 34.     capture confirm new var `3'
+ 35.     if (_rc!=0 & "`at'"!="`3'") error 198
+ 36.     confirm new var `4'
+ 37.     confirm new var `5'
+ 38.   }
+ 39. 
+.   //If the user does not specify the evaluation sequence, this it i
+> s taken to be the histogram midpoints
+ 40.   if ("`at'" == "") {
+ 41.     local at  = "`1'"
+ 42.   }
+ 43. 
+.   //Call MATA function
+ 44.   mata: DCdensitysub("`R'", "`touse'", `breakpoint', `b', `h', `
+> verbose', "`cellmpname'", "`cellvalname'", ///
+ 45.                      "`evalname'", "`cellsmname'", "`cellsmsenam
+> e'", "`at'")
+ 46. 
+.   //Dump MATA return codes into STATA return codes 
+ 47.   return scalar theta = r(theta)
+ 48.   return scalar se = r(se)
+ 49.   return scalar binsize = r(binsize)
+ 50.   return scalar bandwidth = r(bandwidth)
+ 51. 
+.   //if user wants the graph...
+ 52.   if ("`graph'"!="nograph") { 
+ 53.     tempvar hi
+ 54.     quietly gen `hi' = `cellsmname' + 1.96*`cellsmsename'
+ 55.     tempvar lo
+ 56.     quietly gen `lo' = `cellsmname' - 1.96*`cellsmsename'
+ 57.     gr twoway (scatter `cellvalname' `cellmpname', msymbol(circl
+> e_hollow) mcolor(gray))           ///
+ 58.       (line `cellsmname' `evalname' if `evalname' < `breakpoint'
+> , lcolor(black) lwidth(medthick))   ///
+ 59.         (line `cellsmname' `evalname' if `evalname' > `breakpoin
+> t', lcolor(black) lwidth(medthick))   ///
+ 60.           (line `hi' `evalname' if `evalname' < `breakpoint', lc
+> olor(black) lwidth(vthin))              ///
+ 61.             (line `lo' `evalname' if `evalname' < `breakpoint', 
+> lcolor(black) lwidth(vthin))              ///
+ 62.               (line `hi' `evalname' if `evalname' > `breakpoint'
+> , lcolor(black) lwidth(vthin))              ///
+ 63.                 (line `lo' `evalname' if `evalname' > `breakpoin
+> t', lcolor(black) lwidth(vthin)),             ///
+ 64.                   xline(`breakpoint', lcolor(black)) legend(off)
+ 65.     if ("`graphname'"!="") {
+ 66.       di "Exporting graph as `graphname'"
+ 67.       graph export `graphname', replace
+ 68.     }
+ 69.   }
+ 70. }
+ 71. end
+
+. 
+. 
+. mata:
+------------------------------------------------- mata (type end to e
+> xit) --------------------------------------------------------------
+: mata set matastrict on
+
+: 
+: void DCdensitysub(string scalar runvar, string scalar tousevar, rea
+> l scalar c, real scalar b, ///
+'/' found where name expected
+---------------------------------------------------------------------
+r(3000);
+
+.                   real scalar h, real scalar verbose, string scalar
+>  cellmpname, string scalar cellvalname, ///
+command real is unrecognized
+r(199);
+
+.                   string scalar evalname, string scalar cellsmname,
+>  string scalar cellsmsename, ///
+command string is unrecognized
+r(199);
+
+.                   string scalar atname) {
+command string is unrecognized
+r(199);
+
+.   //   inputs: runvar - name of stata running variable ("R" in McCr
+> ary (2008))
+/ is not a valid command name
+r(199);
+
+.   //             tousevar - name of variable indicating which obs t
+> o use
+/ is not a valid command name
+r(199);
+
+.   //             c - point of potential discontinuity
+/ is not a valid command name
+r(199);
+
+.   //             b - bin size entered by user (zero if default is t
+> o be used)
+/ is not a valid command name
+r(199);
+
+.   //             h - bandwidth entered by user (zero if default is 
+> to be used)
+/ is not a valid command name
+r(199);
+
+.   //             verbose - flag for extra messages printing to scre
+> en
+/ is not a valid command name
+r(199);
+
+.   //             cellmpname - name of new variable that will hold t
+> he histogram cell midpoints
+/ is not a valid command name
+r(199);
+
+.   //             cellvalname - name of new variable that will hold 
+> the histogram values
+/ is not a valid command name
+r(199);
+
+.   //             evalname - name of new variable that will hold loc
+> ations where the histogram smoothing was
+/ is not a valid command name
+r(199);
+
+.   //                        evaluated
+/ is not a valid command name
+r(199);
+
+.   //             cellsmname - name of new variable that will hold t
+> he smoothed histogram cell values
+/ is not a valid command name
+r(199);
+
+.   //             cellsmsename - name of new variable that will hold
+>  standard errors for smoothed histogram cells
+/ is not a valid command name
+r(199);
+
+.   //             atname - name of existing stata variable holding p
+> oints at which to eval smoothed histogram
+/ is not a valid command name
+r(199);
+
+. 
+.   //declarations for general use and histogram generation
+/ is not a valid command name
+r(199);
+
+.   real colvector run// stata running variable
+command real is unrecognized
+r(199);
+
+.   string scalar statacom// string to hold stata commands
+command string is unrecognized
+r(199);
+
+.   real scalar errcode                                           // 
+> scalar to hold return code for stata commands
+command real is unrecognized
+r(199);
+
+.   real scalar rn, rsd, rmin, rmax, rp75, rp25, riqr     // scalars 
+> for summary stats of running var
+command real is unrecognized
+r(199);
+
+.   real scalar l, r// midpoint of lowest bin and highest bin in hist
+> ogram
+command real is unrecognized
+r(199);
+
+.   real scalar lc, rc// midpoint of bin just left of and just right 
+> of breakpoint
+command real is unrecognized
+r(199);
+
+.   real scalar j// number of bins spanned by running var
+command real is unrecognized
+r(199);
+
+.   real colvector binnum// each obs bin number
+command real is unrecognized
+r(199);
+
+.   real colvector cellval// histogram cell values
+command real is unrecognized
+r(199);
+
+.   real scalar i// counter
+command real is unrecognized
+r(199);
+
+.   real scalar cellnum// cell value holder for histogram generation
+command real is unrecognized
+r(199);
+
+.   real colvector cellmp// histogram cell midpoints
+command real is unrecognized
+r(199);
+
+. 
+.   //Set up histogram grid
+/ is not a valid command name
+r(199);
+
+. 
+.   st_view(run, ., runvar, tousevar)     //view of running variable-
+> -only observations for which `touse'=1
+command st_view is unrecognized
+r(199);
+
+. 
+.   //Get summary stats on running variable
+/ is not a valid command name
+r(199);
+
+.   statacom = "quietly summarize " + runvar + " if " + tousevar + ",
+>  det"
+command statacom is unrecognized
+r(199);
+
+.   errcode=_stata(statacom,1)
+command errcode is unrecognized
+r(199);
+
+.   if (errcode!=0) {
+errcode not found
+r(111);
+
+.     "Unable to successfully execute the command "+statacom
+"Unable to successfully execute the command  is not a valid command n
+> ame
+r(199);
+
+.     "Check whether you have given Stata enough memory"
+"Check whether you have given Stata enough memory is not a valid comm
+> and name
+r(199);
+
+.   }
+} is not a valid command name
+r(199);
+
+.   rn = st_numscalar("r(N)")
+command rn is unrecognized
+r(199);
+
+.   rsd = st_numscalar("r(sd)")
+command rsd is unrecognized
+r(199);
+
+.   rmin = st_numscalar("r(min)")
+command rmin is unrecognized
+r(199);
+
+.   rmax = st_numscalar("r(max)")
+command rmax is unrecognized
+r(199);
+
+.   rp75 = st_numscalar("r(p75)") 
+command rp75 is unrecognized
+r(199);
+
+.   rp25 = st_numscalar("r(p25)")
+command rp25 is unrecognized
+r(199);
+
+.   riqr = rp75 - rp25
+command riqr is unrecognized
+r(199);
+
+. 
+.   if ( (c<=rmin) | (c>=rmax) ) {
+c ambiguous abbreviation
+r(111);
+
+.     printf("Breakpoint must lie strictly within range of running va
+> riable\n")
+command printf is unrecognized
+r(199);
+
+.     _error(3498)
+command _error is unrecognized
+r(199);
+
+.   }
+} is not a valid command name
+r(199);
+
+.   
+.   //set bin size to default in paper sec. III.B unless provided by 
+> the user
+/ is not a valid command name
+r(199);
+
+.   if (b == 0) {
+b ambiguous abbreviation
+r(111);
+
+.     b = 2*rsd*rn^(-1/2)
+command b is unrecognized
+r(199);
+
+.     if (verbose) printf("Using default bin size calculation, bin si
+> ze = %f\n", b)
+verbose not found
+r(111);
+
+.   }
+} is not a valid command name
+r(199);
+
+. 
+.   //bookkeeping
+/ is not a valid command name
+r(199);
+
+.   l = floor((rmin-c)/b)*b+b/2+c  // midpoint of lowest bin in histo
+> gram
+=exp not allowed
+r(101);
+
+.   r = floor((rmax-c)/b)*b+b/2+c  // midpoint of lowest bin in histo
+> gram
+command r is unrecognized
+r(199);
+
+.   lc = c-(b/2) // midpoint of bin just left of breakpoint
+command lc is unrecognized
+r(199);
+
+.   rc = c+(b/2) // midpoint of bin just right of breakpoint
+command rc is unrecognized
+r(199);
+
+.   j = floor((rmax-rmin)/b)+2
+command j is unrecognized
+r(199);
+
+. 
+.   //create bin numbers corresponding to run... See McCrary (2008, e
+> q 2)
+/ is not a valid command name
+r(199);
+
+.   binnum = round((((floor((run :- c):/b):*b:+b:/2:+c) :- l):/b) :+ 
+> 1)  // bin number for each obs
+command binnum is unrecognized
+r(199);
+
+. 
+.   //generate histogram 
+/ is not a valid command name
+r(199);
+
+.   cellval = J(j,1,0)  // initialize cellval as j-vector of zeros
+command cellval is unrecognized
+r(199);
+
+.   for (i = 1; i <= rn; i++) {
+invalid syntax
+r(198);
+
+.     cellnum = binnum[i]
+command cellnum is unrecognized
+r(199);
+
+.     cellval[cellnum] = cellval[cellnum] + 1
+command cellval is unrecognized
+r(199);
+
+.   }
+} is not a valid command name
+r(199);
+
+.   
+.   cellval = cellval :/ rn  // convert counts into fractions
+command cellval is unrecognized
+r(199);
+
+.   cellval = cellval :/ b  // normalize histogram to integrate to 1
+command cellval is unrecognized
+r(199);
+
+.   cellmp = range(1,j,1)  // initialize cellmp as vector of integers
+>  from 1 to j
+command cellmp is unrecognized
+r(199);
+
+.   cellmp = floor(((l :+ (cellmp:-1):*b):-c):/b):*b:+b:/2:+c  // con
+> vert bin numbers into cell midpoints
+command cellmp is unrecognized
+r(199);
+
+.   
+.   //place histogram info into stata data set
+/ is not a valid command name
+r(199);
+
+.   real colvector stcellval// stata view for cell value variable
+command real is unrecognized
+r(199);
+
+.   real colvector stcellmp// stata view for cell midpoint variable
+command real is unrecognized
+r(199);
+
+. 
+.   (void) st_addvar("float", cellvalname)
+( is not a valid command name
+r(199);
+
+.   st_view(stcellval, ., cellvalname)
+command st_view is unrecognized
+r(199);
+
+.   (void) st_addvar("float", cellmpname)
+( is not a valid command name
+r(199);
+
+.   st_view(stcellmp, ., cellmpname)
+command st_view is unrecognized
+r(199);
+
+.   stcellval[|1\j|] = cellval
+command stcellval is unrecognized
+r(199);
+
+.   stcellmp[|1\j|] = cellmp
+command stcellmp is unrecognized
+r(199);
+
+.   
+.   //Run 4th order global polynomial on histogram to get optimal ban
+> dwidth (if necessary)
+/ is not a valid command name
+r(199);
+
+.   real matrix P// projection matrix returned from orthpoly command
+command real is unrecognized
+r(199);
+
+.   real matrix betaorth4// coeffs from regression of orthogonal powe
+> rs of cellmp
+command real is unrecognized
+r(199);
+
+.   real matrix beta4// coeffs from normal regression of powers of ce
+> llmp
+command real is unrecognized
+r(199);
+
+.   real scalar mse4// mean squared error from polynomial regression
+command real is unrecognized
+r(199);
+
+.   real scalar hleft, hright// bandwidth est from polynomial left of
+>  and right of breakpoint
+command real is unrecognized
+r(199);
+
+.   real scalar leftofc, rightofc              // bin number just lef
+> t of and just right of breakpoint
+command real is unrecognized
+r(199);
+
+.   real colvector cellmpleft, cellmpright// cell midpoints left of a
+> nd right of breakpoint
+command real is unrecognized
+r(199);
+
+.   real colvector fppleft, fppright// fit second deriv of hist left 
+> of and right of breakpoint
+command real is unrecognized
+r(199);
+
+. 
+.   //only calculate optimal bandwidth if user hasn't provided one
+/ is not a valid command name
+r(199);
+
+.   if (h == 0) {
+h not found
+r(111);
+
+.     //separate cells left of and right of the cutoff
+/ is not a valid command name
+r(199);
+
+.     leftofc =  round((((floor((lc - c)/b)*b+b/2+c) - l)/b) + 1) // 
+> bin number just left of breakpoint
+command leftofc is unrecognized
+r(199);
+
+.     rightofc = round((((floor((rc - c)/b)*b+b/2+c) - l)/b) + 1) // 
+> bin number just right of breakpoint
+command rightofc is unrecognized
+r(199);
+
+.     if (rightofc-leftofc != 1) {
+rightofc not found
+r(111);
+
+.       printf("Error occurred in optimal bandwidth calculation\n")
+command printf is unrecognized
+r(199);
+
+.       _error(3498)
+command _error is unrecognized
+r(199);
+
+.     }
+} is not a valid command name
+r(199);
+
+.     cellmpleft = cellmp[|1\leftofc|]
+command cellmpleft is unrecognized
+r(199);
+
+.     cellmpright = cellmp[|rightofc\j|]
+command cellmpright is unrecognized
+r(199);
+
+. 
+.     //estimate 4th order polynomial left of the cutoff
+/ is not a valid command name
+r(199);
+
+.     statacom = "orthpoly " + cellmpname + ", generate(" + cellmpnam
+> e + "*) deg(4) poly(P)"
+command statacom is unrecognized
+r(199);
+
+.     errcode=_stata(statacom,1)
+command errcode is unrecognized
+r(199);
+
+.     if (errcode!=0) {
+errcode not found
+r(111);
+
+.       "Unable to successfully execute the command "+statacom
+"Unable to successfully execute the command  is not a valid command n
+> ame
+r(199);
+
+.       "Check whether you have given Stata enough memory"
+"Check whether you have given Stata enough memory is not a valid comm
+> and name
+r(199);
+
+.     }
+} is not a valid command name
+r(199);
+
+.     P = st_matrix("P")
+command P is unrecognized
+r(199);
+
+.     statacom = "reg " + cellvalname + " " + cellmpname + "1-" + cel
+> lmpname + "4 if " + cellmpname + " < " + strofreal(c)
+command statacom is unrecognized
+r(199);
+
+.     errcode=_stata(statacom,1)
+command errcode is unrecognized
+r(199);
+
+.     if (errcode!=0) {
+errcode not found
+r(111);
+
+.       "Unable to successfully execute the command "+statacom
+"Unable to successfully execute the command  is not a valid command n
+> ame
+r(199);
+
+.       "Check whether you have given Stata enough memory"
+"Check whether you have given Stata enough memory is not a valid comm
+> and name
+r(199);
+
+.     }
+} is not a valid command name
+r(199);
+
+.     mse4 = st_numscalar("e(rmse)")^2
+command mse4 is unrecognized
+r(199);
+
+.     betaorth4 = st_matrix("e(b)")
+command betaorth4 is unrecognized
+r(199);
+
+.     beta4 = betaorth4 * P
+command beta4 is unrecognized
+r(199);
+
+.     fppleft = 2*beta4[2] :+ 6*beta4[3]:*cellmpleft + 12*beta4[4]:*c
+> ellmpleft:^2
+command fppleft is unrecognized
+r(199);
+
+.     hleft = 3.348 * ( mse4*(c-l) / sum( fppleft:^2) )^(1/5)
+command hleft is unrecognized
+r(199);
+
+. 
+.     //estimate 4th order polynomial right of the cutoff
+/ is not a valid command name
+r(199);
+
+.     P = st_matrix("P")
+command P is unrecognized
+r(199);
+
+.     statacom = "reg " + cellvalname + " " + cellmpname + "1-" + cel
+> lmpname + "4 if " + cellmpname + " > " + strofreal(c)
+command statacom is unrecognized
+r(199);
+
+.     errcode=_stata(statacom,1)
+command errcode is unrecognized
+r(199);
+
+.     if (errcode!=0) {
+errcode not found
+r(111);
+
+.       "Unable to successfully execute the command "+statacom
+"Unable to successfully execute the command  is not a valid command n
+> ame
+r(199);
+
+.       "Check whether you have given Stata enough memory"
+"Check whether you have given Stata enough memory is not a valid comm
+> and name
+r(199);
+
+.     }
+} is not a valid command name
+r(199);
+
+.     mse4 = st_numscalar("e(rmse)")^2
+command mse4 is unrecognized
+r(199);
+
+.     betaorth4 = st_matrix("e(b)")
+command betaorth4 is unrecognized
+r(199);
+
+.     beta4 = betaorth4 * P
+command beta4 is unrecognized
+r(199);
+
+.     fppright = 2*beta4[2] :+ 6*beta4[3]:*cellmpright + 12*beta4[4]:
+> *cellmpright:^2
+command fppright is unrecognized
+r(199);
+
+.     hright = 3.348 * ( mse4*(r-c) / sum( fppright:^2) )^(1/5)
+command hright is unrecognized
+r(199);
+
+.     statacom = "drop " + cellmpname + "1-" + cellmpname + "4"
+command statacom is unrecognized
+r(199);
+
+.     errcode=_stata(statacom,1)
+command errcode is unrecognized
+r(199);
+
+.     if (errcode!=0) {
+errcode not found
+r(111);
+
+.       "Unable to successfully execute the command "+statacom
+"Unable to successfully execute the command  is not a valid command n
+> ame
+r(199);
+
+.       "Check whether you have given Stata enough memory"
+"Check whether you have given Stata enough memory is not a valid comm
+> and name
+r(199);
+
+.     }
+} is not a valid command name
+r(199);
+
+. 
+.     //set bandwidth to average of calculations from left and right
+/ is not a valid command name
+r(199);
+
+.     h = 0.5*(hleft + hright)
+=exp not allowed
+r(101);
+
+.     if (verbose) printf("Using default bandwidth calculation, bandw
+> idth = %f\n", h)
+verbose not found
+r(111);
+
+.   }
+} is not a valid command name
+r(199);
+
+. 
+.   //Add padding zeros to histogram (to assist smoothing)
+/ is not a valid command name
+r(199);
+
+.   real scalar padzeros// number of zeros to pad on each side of his
+> t
+command real is unrecognized
+r(199);
+
+.   real scalar jp// number of histogram bins including padded zeros
+command real is unrecognized
+r(199);
+
+. 
+.   padzeros = ceil(h/b)  // number of zeros to pad on each side of h
+> ist
+command padzeros is unrecognized
+r(199);
+
+.   jp = j + 2*padzeros
+command jp is unrecognized
+r(199);
+
+.   if (padzeros >= 1) {
+padzeros not found
+r(111);
+
+.     //add padding to histogram variables
+/ is not a valid command name
+r(199);
+
+.     cellval = ( J(padzeros,1,0) \ cellval \ J(padzeros,1,0) )
+command cellval is unrecognized
+r(199);
+
+.     cellmp = ( range(l-padzeros*b,l-b,b) \ cellmp \ range(r+b,r+pad
+> zeros*b,b) )
+command cellmp is unrecognized
+r(199);
+
+.     //dump padded histogram variables out to stata
+/ is not a valid command name
+r(199);
+
+.     stcellval[|1\jp|] = cellval
+command stcellval is unrecognized
+r(199);
+
+.     stcellmp[|1\jp|] = cellmp
+command stcellmp is unrecognized
+r(199);
+
+.   }
+} is not a valid command name
+r(199);
+
+. 
+.   //Generate point estimate of discontinuity
+/ is not a valid command name
+r(199);
+
+.   real colvector dist// distance from a given observation
+command real is unrecognized
+r(199);
+
+.   real colvector w// triangle kernel weights
+command real is unrecognized
+r(199);
+
+.   real matrix XX, Xy// regression matrcies for weighted regression
+command real is unrecognized
+r(199);
+
+.   real rowvector xmean, ymean// means for demeaning regression vars
+command real is unrecognized
+r(199);
+
+.   real colvector beta// regression estimates from weighted reg.
+command real is unrecognized
+r(199);
+
+.   real colvector ehat// predicted errors from weighted reg.
+command real is unrecognized
+r(199);
+
+.   real scalar fhatr, fhatl// local linear reg. estimates at discont
+> inuity
+command real is unrecognized
+r(199);
+
+.                                                                 // 
+>   estimated from right and left, respectively
+/ is not a valid command name
+r(199);
+
+.   real scalar thetahat// discontinuity estimate
+command real is unrecognized
+r(199);
+
+.   real scalar sethetahat// standard error of discontinuity estimate
+command real is unrecognized
+r(199);
+
+.   
+.   //Estimate left of discontinuity
+/ is not a valid command name
+r(199);
+
+.   dist = cellmp :- c  // distance from potential discontinuity
+command dist is unrecognized
+r(199);
+
+.   w = rowmax( (J(jp,1,0), (1:-abs(dist:/h))) ):*(cellmp:<c)  // tri
+> angle kernel weights for left
+command w is unrecognized
+r(199);
+
+.   w = (w:/sum(w)) :* jp  // normalize weights to sum to number of c
+> ells (as does stata aweights)
+command w is unrecognized
+r(199);
+
+.   xmean = mean(dist, w)
+command xmean is unrecognized
+r(199);
+
+.   ymean = mean(cellval, w)
+command ymean is unrecognized
+r(199);
+
+.   XX = quadcrossdev(dist,xmean,w,dist,xmean)    //fixed error on 11
+> .17.2009
+command XX is unrecognized
+r(199);
+
+.   Xy = quadcrossdev(dist,xmean,w,cellval,ymean)
+command Xy is unrecognized
+r(199);
+
+.   beta = invsym(XX)*Xy
+command beta is unrecognized
+r(199);
+
+.   beta = beta \ ymean-xmean*beta
+command beta is unrecognized
+r(199);
+
+.   fhatl = beta[2,1]
+command fhatl is unrecognized
+r(199);
+
+.   
+.   //Estimate right of discontinuity
+/ is not a valid command name
+r(199);
+
+.   w = rowmax( (J(jp,1,0), (1:-abs(dist:/h))) ):*(cellmp:>=c)  // tr
+> iangle kernel weights for right
+command w is unrecognized
+r(199);
+
+.   w = (w:/sum(w)) :* jp  // normalize weights to sum to number of c
+> ells (as does stata aweights)
+command w is unrecognized
+r(199);
+
+.   xmean = mean(dist, w)
+command xmean is unrecognized
+r(199);
+
+.   ymean = mean(cellval, w)
+command ymean is unrecognized
+r(199);
+
+.   XX = quadcrossdev(dist,xmean,w,dist,xmean)   //fixed error on 11.
+> 17.2009
+command XX is unrecognized
+r(199);
+
+.   Xy = quadcrossdev(dist,xmean,w,cellval,ymean)
+command Xy is unrecognized
+r(199);
+
+.   beta = invsym(XX)*Xy
+command beta is unrecognized
+r(199);
+
+.   beta = beta \ ymean-xmean*beta
+command beta is unrecognized
+r(199);
+
+.   fhatr = beta[2,1]
+command fhatr is unrecognized
+r(199);
+
+.   
+.   //Calculate and display discontinuity estimate
+/ is not a valid command name
+r(199);
+
+.   thetahat = ln(fhatr) - ln(fhatl)
+command thetahat is unrecognized
+r(199);
+
+.   sethetahat = sqrt( (1/(rn*h)) * (24/5) * ((1/fhatr) + (1/fhatl)) 
+> )
+command sethetahat is unrecognized
+r(199);
+
+.   printf("\nDiscontinuity estimate (log difference in height): %f\n
+> ", thetahat)
+command printf is unrecognized
+r(199);
+
+.   printf("                                                   (%f)\n
+> ", sethetahat)
+command printf is unrecognized
+r(199);
+
+. 
+.   loopover=1 //This is an advanced user switch to get rid of LLR sm
+> oothing
+command loopover is unrecognized
+r(199);
+
+.   //Can be used to speed up simulation runs--the switch avoids smoo
+> thing at
+/ is not a valid command name
+r(199);
+
+.   //eval points you aren't studying
+/ is not a valid command name
+r(199);
+
+.   
+.   //Perform local linear regression (LLR) smoothing
+/ is not a valid command name
+r(199);
+
+.   if (loopover==1) {
+loopover not found
+r(111);
+
+.     real scalar cellsm// smoothed histogram cell values
+command real is unrecognized
+r(199);
+
+.     real colvector stcellsm// stata view for smoothed values
+command real is unrecognized
+r(199);
+
+.     real colvector atstata// stata view for at variable (evaluation
+>  points)
+command real is unrecognized
+r(199);
+
+.     real colvector at// points at which to evaluate LLR smoothing
+command real is unrecognized
+r(199);
+
+.     real scalar evalpts// number of evaluation points
+command real is unrecognized
+r(199);
+
+.     real colvector steval// stata view for LLR smothing eval points
+command real is unrecognized
+r(199);
+
+. 
+.     // if evaluating at cell midpoints
+/ is not a valid command name
+r(199);
+
+.     if (atname == cellmpname) {  
+atname not found
+r(111);
+
+.       at = cellmp[|padzeros+1\padzeros+j|]
+command at is unrecognized
+r(199);
+
+.       evalpts = j
+command evalpts is unrecognized
+r(199);
+
+.     }
+} is not a valid command name
+r(199);
+
+.     else {
+.       st_view(atstata, ., atname)
+command st_view is unrecognized
+r(199);
+.       evalpts = nonmissing(atstata)
+.       at = atstata[|1\evalpts|]
+.     }
+r(199);
+
+.     
+.     if (verbose) printf("Performing LLR smoothing.\n")
+verbose not found
+r(111);
+
+.     if (verbose) printf("%f iterations will be performed \n",j)
+verbose not found
+r(111);
+
+.     
+.     cellsm = J(evalpts,1,0)  // initialize smoothed histogram cell 
+> values to zero
+command cellsm is unrecognized
+r(199);
+
+.     // loop over all evaluation points
+/ is not a valid command name
+r(199);
+
+.     for (i = 1; i <= evalpts; i++) {
+invalid syntax
+r(198);
+
+.       dist = cellmp :- at[i]
+command dist is unrecognized
+r(199);
+
+.       //set weights relative to current bin - note comma below is r
+> ow join operator, not two separate args
+/ is not a valid command name
+r(199);
+
+.       w = rowmax( (J(jp,1,0), ///
+command w is unrecognized
+r(199);
+
+.         (1:-abs(dist:/h))):*((cellmp:>=c)*(at[i]>=c):+(cellmp:<c):*
+> (at[i]<c)) )
+( is not a valid command name
+r(199);
+
+.       //manually obtain weighted regression coefficients
+/ is not a valid command name
+r(199);
+
+.       w = (w:/sum(w)) :* jp  // normalize weights to sum to N (as d
+> oes stata aweights)
+command w is unrecognized
+r(199);
+
+.       xmean = mean(dist, w)
+command xmean is unrecognized
+r(199);
+
+.       ymean = mean(cellval, w)
+command ymean is unrecognized
+r(199);
+
+.       XX = quadcrossdev(dist,xmean,w,dist,xmean)  //fixed error on 
+> 11.17.2009 
+command XX is unrecognized
+r(199);
+
+.       Xy = quadcrossdev(dist,xmean,w,cellval,ymean)
+command Xy is unrecognized
+r(199);
+
+.       beta = invsym(XX)*Xy
+command beta is unrecognized
+r(199);
+
+.       beta = beta \ ymean-xmean*beta
+command beta is unrecognized
+r(199);
+
+.       cellsm[i] = beta[2,1]
+command cellsm is unrecognized
+r(199);
+
+.       //Show dots
+/ is not a valid command name
+r(199);
+
+.       if (verbose) {
+verbose not found
+r(111);
+
+.         if (mod(i,10) == 0) {
+i ambiguous abbreviation
+r(111);
+
+.           printf(".")
+command printf is unrecognized
+r(199);
+
+.           displayflush()
+command displayflush is unrecognized
+r(199);
+
+.           if (mod(i,500) == 0) {
+i ambiguous abbreviation
+r(111);
+
+.             printf(" %f LLR iterations\n",i)
+command printf is unrecognized
+r(199);
+
+.             displayflush()
+command displayflush is unrecognized
+r(199);
+
+.           }
+} is not a valid command name
+r(199);
+
+.         }
+} is not a valid command name
+r(199);
+
+.       }
+} is not a valid command name
+r(199);
+
+.     }
+} is not a valid command name
+r(199);
+
+.     printf("\n")
+command printf is unrecognized
+r(199);
+
+.   
+.     //set up stata variable to hold evaluation points for smoothed 
+> values
+/ is not a valid command name
+r(199);
+
+.     (void) st_addvar("float", evalname)
+( is not a valid command name
+r(199);
+
+.     st_view(steval, ., evalname)
+command st_view is unrecognized
+r(199);
+
+.     steval[|1\evalpts|] = at
+command steval is unrecognized
+r(199);
+
+. 
+.     //set up stata variable to hold smoothed values
+/ is not a valid command name
+r(199);
+
+.     (void) st_addvar("float", cellsmname)
+( is not a valid command name
+r(199);
+
+.     st_view(stcellsm, ., cellsmname)
+command st_view is unrecognized
+r(199);
+
+.     stcellsm[|1\evalpts|] = cellsm
+command stcellsm is unrecognized
+r(199);
+
+.     
+.     //Calculate standard errors for LLR smoothed values
+/ is not a valid command name
+r(199);
+
+.     real scalar m// amount of kernel being truncated by breakpoint
+command real is unrecognized
+r(199);
+
+.     real colvector cellsmse// standard errors of smoothed histogram
+command real is unrecognized
+r(199);
+
+.     real colvector stcellsmse// stata view for cell midpoint variab
+> le
+command real is unrecognized
+r(199);
+
+.     cellsmse = J(evalpts,1,0)  // initialize standard errors to zer
+> o
+command cellsmse is unrecognized
+r(199);
+
+.     for (i = 1; i <= evalpts; i++) {
+invalid syntax
+r(198);
+
+.       if (at[i] > c) {
+at not found
+r(111);
+
+.         m = max((-1, (c-at[i])/h))
+expression invalid
+r(3000);
+
+.         cellsmse[i] = ((12*cellsm[i])/(5*rn*h))* ///
+command cellsmse is unrecognized
+r(199);
+
+.           (2-3*m^11-24*m^10-83*m^9-72*m^8+42*m^7+18*m^6-18*m^5+18*m
+> ^4-3*m^3+18*m^2-15*m)/ ///
+( is not a valid command name
+r(199);
+
+.             (1+m^6+6*m^5-3*m^4-4*m^3+9*m^2-6*m)^2
+( is not a valid command name
+r(199);
+
+.         cellsmse[i] = sqrt(cellsmse[i])
+command cellsmse is unrecognized
+r(199);
+
+.       }
+} is not a valid command name
+r(199);
+
+.       if (at[i] < c) {
+at not found
+r(111);
+
+.         m = min(((c-at[i])/h, 1))
+expression invalid
+r(3000);
+
+.         cellsmse[i] = ((12*cellsm[i])/(5*rn*h))* ///
+command cellsmse is unrecognized
+r(199);
+
+.           (2+3*m^11-24*m^10+83*m^9-72*m^8-42*m^7+18*m^6+18*m^5+18*m
+> ^4-3*m^3+18*m^2+15*m)/ ///
+( is not a valid command name
+r(199);
+
+.             (1+m^6-6*m^5-3*m^4+4*m^3+9*m^2+6*m)^2
+( is not a valid command name
+r(199);
+
+.         cellsmse[i] = sqrt(cellsmse[i])
+command cellsmse is unrecognized
+r(199);
+
+.       }
+} is not a valid command name
+r(199);
+
+.     }
+} is not a valid command name
+r(199);
+
+.     //set up stata variable to hold standard errors for smoothed va
+> lues
+/ is not a valid command name
+r(199);
+
+.     (void) st_addvar("float", cellsmsename)
+( is not a valid command name
+r(199);
+
+.     st_view(stcellsmse, ., cellsmsename)
+command st_view is unrecognized
+r(199);
+
+.     stcellsmse[|1\evalpts|] = cellsmse
+command stcellsmse is unrecognized
+r(199);
+
+.   }
+} is not a valid command name
+r(199);
+
+.   //End of loop over evaluation points
+/ is not a valid command name
+r(199);
+
+.   
+.   //Fill in STATA return codes
+/ is not a valid command name
+r(199);
+
+.   st_rclear()
+command st_rclear is unrecognized
+r(199);
+
+.   st_numscalar("r(theta)", thetahat)
+command st_numscalar is unrecognized
+r(199);
+
+.   st_numscalar("r(se)", sethetahat)
+command st_numscalar is unrecognized
+r(199);
+
+.   st_numscalar("r(binsize)", b)
+command st_numscalar is unrecognized
+r(199);
+
+.   st_numscalar("r(bandwidth)", h)
+command st_numscalar is unrecognized
+r(199);
+
+. }
+} is not a valid command name
+r(199);
+
+. end
+command end is unrecognized
+r(199);
+
+. 
+. 
+. help DCdensity
+
+. personal
+your personal ado-directory is /Users/valentinaandrade/Documents/Stat
+> a/ado/personal/
+(type -personal dir- to see its contents)
+
+. help DCdensity
+
+. help acreg
+
+. help DCdensity
+
+. sscc install DCdensity
+command sscc is unrecognized
+r(199);
+
+. ssc install DCdensity
+ssc install: "dcdensity" not found at SSC, type search dcdensity
+(To find all packages at SSC that start with d, type ssc describe d)
+r(601);
+
+. sysdir
+   STATA:  /Applications/Stata/
+    BASE:  /Applications/Stata/ado/base/
+    SITE:  /Applications/Stata/ado/site/
+    PLUS:  /Users/valentinaandrade/Library/Application Support/Stata/
+> ado/plus/
+PERSONAL:  /Users/valentinaandrade/Documents/Stata/ado/personal/
+OLDPLACE:  ~/ado/
+
+. clear all
+
+. set obs 10000
+Number of observations (_N) was 0, now 10,000.
+
+. set seed 2803
+
+. gen Z = rnormal(0, 1)
+
+. DCdensity Z, breakpoint(0) generate(Xj Yj r0 fhat se_fhat) graphname(DCdensity_example.eps
+> )
+Using default bin size calculation, bin size = .019992087
+Using default bandwidth calculation, bandwidth = .753572551
+
+Discontinuity estimate (log difference in height): -.105834361
+                                                   (.055881545)
+Performing LLR smoothing.
+397 iterations will be performed 
+.......................................
+Exporting graph as DCdensity_example.eps
+(file DCdensity_example.eps not found)
+file DCdensity_example.eps saved as EPS format
+
