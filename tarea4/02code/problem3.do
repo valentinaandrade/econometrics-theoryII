@@ -44,7 +44,7 @@ global predeter "NW NE CE SOU IS pop_census1991 alt extension gender age born_re
 **# use data
 * ------------------------------------------------------------------------------
 
-use "$src/final.dta"
+use "$src/final.dta",clear
 
 
 * ------------------------------------------------------------------------------
@@ -245,6 +245,116 @@ label var N "Observations"
 mat li balance, format(%9.3f)
 
 
+* ----------------------------------------------------------------------------
+**# use data
+* ------------------------------------------------------------------------------
+
+use "$src/final.dta",clear
+
+
+
+* sample selection
+reg reb_final n_firms_bid max_wins_std tt_cont ty_del term_limit mv_t $geog $time $auction $mayor $electoral if open_race==0 & number_rivals>0 & number_rivals!=. 
+gen sample1=e(sample)
+keep if sample1==1
+
+drop if mv_t==0 & tt_cont==1
+
+keep if tag_term==1
+
+gen above=mv_t>=0 
+
+egen group=cut(mv_t),  at(-80(1)80)
+egen mv_t_grp=mean(group),by(group)
+
+foreach var of varlist n_firms_bid NW NE CE SOU IS pop_census1991 alt_center extension gender age born_reg secondary college empl_not empl_low empl_medium empl_high office_before party_maj_left_bef party_maj_right_bef party_maj_center_bef party_maj_local_bef same_party1 same_party2 {
+egen `var'_mean = mean(`var'), by(mv_t_grp)
+}
+
+*For presentational purposes
+keep if mv_t>=-10 & mv_t<=10
+keep if n_firms_bid_mean<30
+gen mv_tXabove=mv_t*above
+
+local nino "NW NE CE SOU IS pop_census1991 alt_center extension gender age born_reg college empl_not empl_high office_before same_party1"
+
+local i=1
+foreach var of local nino{
+
+if `i'== 1 {
+ local svar "Northwest"
+ }
+else if `i'==2 {
+ local svar "Northeast"
+}
+else if `i'==3 {
+ local svar "Center"
+ }
+else if `i'==4 {
+ local svar "South"
+}
+else if `i'==5 {
+ local svar "Islands"
+}
+else if `i'==6 {
+ local svar "Population"
+}
+else if `i'==7 {
+ local svar "Altitude"
+}
+else if `i'==8 {
+ local svar "Extension"
+}
+else if `i'==9 {
+ local svar "Female"
+}
+else if `i'==10 {
+ local svar "Age"
+}
+else if `i'==11 {
+ local svar "Local"
+}
+else if `i'==12 {
+ local svar "Education: College"
+}
+else if `i'==13 {
+ local svar "Employment: Not employed"
+}
+else if `i'==14 {
+ local svar "Employment: High-skilled"
+}
+else if `i'==15 {
+ local svar "Previous experience"
+}
+else if `i'==16 {
+ local svar "Incumbent party"
+}
+
+qui lowess `var' mv_t if above==0, gen(ciccio) nograph mean
+qui lowess `var' mv_t if above==1, gen(ciccia) nograph mean
+
+qui reg `var' mv_t mv_t2 mv_t3 if above==0
+predict ciccio2, xb, if e(sample)
+
+qui reg `var' mv_t mv_t2 mv_t3 if above==1
+predict ciccia2, xb, if e(sample)
+
+
+twoway (line ciccio mv_t if above==0 & mv_t<0, sort lcolor(dkgreen)) /*
+*/	   (line ciccia mv_t if above==1 & mv_t>=0, sort lcolor(orange) ) /*
+*/	   (line ciccio2 mv_t if above==0 & mv_t<0, sort lcolor(dkgreen) lp(dash)) /*
+*/	   (line ciccia2 mv_t if above==1 & mv_t>=0, sort lcolor(orange) lp(dash)) /*
+*/     (scatter `var'_mean mv_t_grp , msize(small) mlwidth(vthin) msymbol(circle_hollow) mcolor(gray)), /*
+*/     ylabel(`ylabel') ytitle(`svar', size(medlarge)) /* 
+*/     xtitle(Margin of victory, size(medlarge)) xline(0, lwidth(0.2) lcolor(black)) xscale(range(-10 10)) xlabel(-10 -5 0 5 10) /*
+*/	   leg(off) /*
+*/     saving("$output/figures/fig2_`var'.gph", replace)
+drop ciccio* ciccia*
+
+local i=`i'+1
+
+}
+graph combine fig2_age fig2_alt_center fig2_born_reg fig2_CE fig2_college fig2_empl_high fig2_empl_not fig2_extension fig2_gender fig2_office_before fig2_pop_census1991 fig2_same_party1 fig2_NW fig2_IS fig2_NE  fig2_SOU, saving("output/figures/fig2.png", replace)
 
 
 
